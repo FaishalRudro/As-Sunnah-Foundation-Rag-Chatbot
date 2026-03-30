@@ -1,0 +1,337 @@
+================================================================
+AS-SUNNAH FOUNDATION — RAG ASSISTANT
+ARCHITECTURE EXPLANATION
+================================================================
+
+----------------------------------------------------------------
+OVERVIEW
+----------------------------------------------------------------
+This system is a voice-enabled Retrieval-Augmented Generation
+(RAG) assistant. It takes a question (voice or text), searches
+a knowledge base built from the As-Sunnah Foundation dataset,
+and generates a grounded answer using a local LLM. The answer
+is returned as both text and audio.
+
+The entire stack is free and open-source, running on Kaggle's
+free GPU tier (T4).
+
+----------------------------------------------------------------
+PART 1 — INPUT LAYER
+----------------------------------------------------------------
+The system accepts two types of input:
+
+  Voice Input:
+    The user speaks into a microphone or uploads an audio file
+    through the Gradio interface. The audio is loaded using
+    librosa at 16kHz sample rate and passed to Whisper.
+
+    Whisper (base.en) converts speech to text. The base.en
+    model is English-only, which makes it faster and more
+    accurate for English queries compared to the multilingual
+    base model.
+
+    Audio validation checks are applied: clips under 0.5s or
+    over 60s are rejected with a clear error message.
+
+  Text Input:
+    The user types directly into a Gradio textbox. Sample
+    question buttons are provided for quick testing.
+
+  Priority rule: if both voice and text are provided, voice
+  takes priority.
+
+----------------------------------------------------------------
+PART 2 — SEMANTIC CHUNKING (One-time at startup)
+----------------------------------------------------------------
+Before retrieval can happen, the raw dataset text is split into
+meaningful chunks and indexed. This runs once when the notebook
+starts.
+
+  Loading & Cleaning:
+    The raw text file is loaded, carriage returns normalized,
+    excessive blank lines collapsed, and Unicode NFC-normalized.
+
+  Section Parsing:
+    The text is structured with page-level headings marked as
+    **Heading** and sub-sections inside. The parser identifies
+    these boundaries and creates section dictionaries with four
+    fields: page, section, content, and category.
+
+    Special handling is applied to three page types:
+    - Summary page: skipped entirely. Summary sections are
+      paraphrases of other sections and caused faithfulness
+      scores to drop to zero during testing.
+    - Home Page: the Donation Funds block is split into one
+      chunk per fund (Regular Donation, Masjid Complex, Zakat
+      Fund, etc.) so individual funds can be retrieved precisely.
+    - Activities page: each numbered activity (e.g. Iftar
+      Distribution, Self-Reliance Project) becomes its own
+      chunk.
+    - About Us page: Education, Dawah, and Service goal blocks
+      are split into separate chunks.
+
+  Numeric Chunk Extraction:
+    For sections known to contain key statistics (Iftar
+    Distribution figures, Emergency Relief numbers, Self-
+    Reliance family counts, Dawah video/viewer counts), the
+    sentences carrying those numbers are extracted as dedicated
+    atomic chunks. This ensures that stat-based queries retrieve
+    the exact figures without noise.
+
+  Chunk Sizing:
+    Sections under 700 characters are stored as single chunks.
+    Longer sections are split with RecursiveCharacterTextSplitter
+    (chunk_size=600, overlap=120). Each chunk stores an
+    original_chunk field in its metadata — this is the clean
+    text the LLM will later read, with no embedding prefixes.
+
+  Category Tagging:
+    Each chunk is tagged with a category (education, dawah,
+    service, donation, about, general) based on keywords in
+    the page and section names.
+
+  Result: approximately 60-80 chunks covering the full dataset.
+
+----------------------------------------------------------------
+PART 3 — HYBRID RETRIEVAL (FAISS + BM25 + CrossEncoder)
+----------------------------------------------------------------
+This is the core of the RAG system. When a query arrives, three
+retrieval methods work together.
+
+  Step 1 — FAISS Semantic Search:
+    The embedding model (intfloat/multilingual-e5-base) converts
+    the query and all chunks into 768-dimensional dense vectors.
+
+    multilingual-e5-base requires specific prefixes:
+    - Chunks are indexed with "passage: " prepended
+    - Queries are searched with "query: " prepended
+    These prefixes are critical for the model to work correctly.
+
+    The original_chunk text in metadata is kept clean (no prefix)
+    so the LLM never sees the prefix in its context.
+
+    FAISS performs approximate nearest-neighbour search and
+    returns the top-10 chunks by L2 distance. L2 distance is
+    converted to a similarity score: sim = 1 / (1 + distance).
+
+  Step 2 — BM25 Keyword Search:
+    BM25Okapi (rank_bm25 library) performs exact keyword matching
+    on the original chunk text (no embedding prefix). It returns
+    scores for all chunks and the top-10 are selected.
+
+    BM25 scores are normalised to [0, 1] by dividing by the
+    maximum score in the result set.
+
+    BM25 catches cases where the query contains specific terms
+    (names, numbers, fund names) that semantic search might rank
+    lower.
+
+  Step 3 — Score Merge:
+    The two candidate sets are merged by chunk_id. Each chunk
+    receives a hybrid score:
+
+      hybrid_score = 0.6 * faiss_score + 0.4 * bm25_score
+
+    The 0.6/0.4 weighting was chosen to give semantic search
+    priority while still benefiting from keyword matching.
+    Chunks present in only one result set get a score of 0.0
+    for the missing component.
+
+  Step 4 — CrossEncoder Reranking:
+    The top-12 chunks by hybrid score are passed to a
+    CrossEncoder (cross-encoder/ms-marco-MiniLM-L-6-v2).
+
+    Unlike bi-encoder models (which embed query and document
+    separately), a CrossEncoder sees both the query and the
+    document together in a single forward pass. This produces
+    much more accurate relevance scores but is slower, so it
+    is only applied to the top-12 candidates, not the full
+    index.
+
+    Reranking is performed on the original_chunk text (clean,
+    no prefixes). The final top-k chunks (default 5-6) are
+    returned with their CrossEncoder scores attached as metadata.
+
+----------------------------------------------------------------
+PART 4 — LLM: GEMMA 2B-IT
+----------------------------------------------------------------
+google/gemma-2-2b-it is loaded in float16 on GPU using
+HuggingFace transformers with device_map="auto".
+
+A text-generation pipeline is configured with:
+- max_new_tokens=400
+- do_sample=False (greedy decoding for deterministic answers)
+- repetition_penalty=1.15 (reduces repetitive outputs)
+
+Gemma 2B-IT was chosen because it is instruction-tuned,
+handles the <start_of_turn> / <end_of_turn> chat format,
+is small enough to fit on a free Kaggle T4 GPU, and produces
+coherent answers from retrieved context.
+
+----------------------------------------------------------------
+PART 5 — WHISPER STT
+----------------------------------------------------------------
+openai/whisper base.en handles speech-to-text.
+
+Audio is resampled to 16kHz with librosa before passing to
+Whisper. An initial_prompt is set to "Question about
+As-Sunnah Foundation." to bias transcription toward relevant
+vocabulary. fp16 is used when a GPU is available.
+
+----------------------------------------------------------------
+PART 6 — LSTM CONVERSATION MEMORY
+----------------------------------------------------------------
+A lightweight two-layer system handles multi-turn conversation.
+
+  ConversationLSTM (PyTorch):
+    A small LSTM with input_dim=768 and hidden_dim=128. It
+    encodes the embeddings of all past questions plus the
+    current query and produces per-turn relevance scores.
+
+  ConversationMemory:
+    - Stores the last 6 turns (deque with maxlen=6)
+    - For each new query, embeds all past questions and the
+      current query, runs them through the LSTM, applies
+      exponential time-decay (alpha=0.75 per turn back), and
+      selects the top-3 most relevant past turns to include
+      in the prompt.
+    - Follow-up detection: if the query is 4 words or fewer,
+      or starts with pronouns/connectives (it, that, more,
+      explain, and, also...), it is flagged as a follow-up.
+    - Query expansion: for follow-ups, the last question is
+      prepended to the current query so the retriever has
+      enough context. Example: "When was it founded?" expands
+      to "Founder of As-Sunnah Foundation. — When was it founded?"
+
+----------------------------------------------------------------
+PART 7 — CONFIDENCE SCORING
+----------------------------------------------------------------
+Every answer receives five metrics:
+
+  Faithfulness:
+    The answer is split into sentences. Each sentence is checked
+    for token overlap with the full retrieved context. A sentence
+    is considered "supported" if at least 45% of its tokens
+    appear in the context. Faithfulness = supported / total.
+
+  Precision:
+    Token-level precision of the answer against the context:
+    how many answer tokens appear in the context.
+
+  Retrieval Confidence:
+    The CrossEncoder scores are sigmoid-normalised and averaged
+    across the retrieved chunks.
+
+  Overall Score:
+    overall = 0.45 * faithfulness + 0.30 * precision
+                                  + 0.25 * retrieval_confidence
+
+  Hallucination Risk:
+    hallucination = 1.0 - faithfulness
+
+  Score labels:
+    >= 0.75  →  High (green)
+    >= 0.50  →  Medium (yellow)
+    >= 0.25  →  Low (orange)
+    <  0.25  →  Very Low (red)
+
+----------------------------------------------------------------
+PART 8 — RAG CHAIN (generate_answer)
+----------------------------------------------------------------
+This function ties everything together:
+
+  1. Query expansion via LSTM memory (follow-up detection)
+  2. Hybrid retrieval (FAISS + BM25 + CrossEncoder)
+  3. Build conversation history string from top-3 relevant turns
+  4. Build prompt using Gemma chat format with system rules:
+       - Answer ONLY from the provided context
+       - If answer not in context, reply exactly:
+         "I don't know based on the provided data."
+       - No fabricated statistics, names, or dates
+  5. Gemma generates the answer
+  6. Confidence scoring on the answer vs retrieved chunks
+  7. LSTM memory updated with the new turn
+
+----------------------------------------------------------------
+PART 9-10 — RESPONSE FORMATTING & TTS
+----------------------------------------------------------------
+  Formatter:
+    The answer, source list, and confidence dashboard are
+    combined into a Markdown string for Gradio display.
+    Each source shows its section name, CrossEncoder score,
+    and a 160-character preview.
+
+  TTS:
+    gTTS converts the plain answer text to an English MP3 file
+    saved to a temp path. TTS is skipped for fallback answers
+    (no point reading "I don't know" aloud) and very short
+    responses. The audio file path is returned to Gradio,
+    which autoplays it.
+
+----------------------------------------------------------------
+PART 11-12 — MAIN PIPELINE & GRADIO UI
+----------------------------------------------------------------
+  process_query():
+    Resolves input (audio → Whisper, or text directly), runs
+    generate_answer(), formats the response, generates audio,
+    updates Gradio session state, and returns all four outputs:
+    response markdown, audio path, updated history state,
+    and history panel markdown.
+
+  Gradio Interface:
+    - Left column: audio input, text input, submit/clear
+      buttons, 18 sample question buttons
+    - Right column: markdown answer panel, audio player,
+      collapsible history accordion
+    - share=True generates a public URL for demo access
+
+----------------------------------------------------------------
+ANTI-HALLUCINATION DESIGN
+----------------------------------------------------------------
+Three layers prevent hallucination:
+
+  1. Prompt-level constraint:
+     The system prompt explicitly forbids the LLM from adding
+     information not present in the context, and instructs it
+     to use the exact fallback phrase if the answer is absent.
+
+  2. Metadata isolation:
+     The original_chunk field stores clean dataset text
+     separately from the e5-prefixed text used for embedding.
+     The LLM only ever sees original_chunk — it never sees
+     embedding prefixes or retrieval metadata.
+
+  3. Confidence monitoring:
+     A faithfulness score of 0.0 and hallucination risk of 1.0
+     immediately flags answers that are not grounded in the
+     retrieved context, even if the LLM did not trigger the
+     fallback phrase. This is visible to the user in the
+     confidence dashboard.
+
+----------------------------------------------------------------
+KNOWN FAILURE MODES
+----------------------------------------------------------------
+  Founding year query:
+    If the dataset does not contain the founding year as an
+    explicit fact, Gemma may infer it from context and state
+    "2017". The faithfulness score drops to 0.0 and confidence
+    to Very Low, correctly flagging this as a likely hallucination.
+    Fix: add the founding year explicitly to the dataset, or
+    add a post-processing check that refuses answers when
+    faithfulness = 0.
+
+  Broad queries:
+    Questions like "tell me everything about disaster relief"
+    retrieve lower-scoring chunks because no single chunk
+    covers the entire topic. The CrossEncoder scores are low
+    (even negative), and overall confidence drops. The answer
+    may be partially correct but incomplete.
+
+  Follow-up expansion errors:
+    If the LSTM incorrectly flags a fresh question as a
+    follow-up and expands it, the retriever searches for a
+    combined topic that does not exist, reducing answer quality.
+
+================================================================
+END OF ARCHITECTURE EXPLANATION
+================================================================
