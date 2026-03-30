@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Secrets & tokens
+secrets.json
+*.token
+.kaggle/
+kaggle.json
+
+# Jupyter / Kaggle
+.ipynb_checkpoints/
+*.ipynb
+
+# Model cache (large files — download at runtime)
+.cache/
+models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Audio temp files
+tts_answer_*.mp3
+tmp_audio_*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
