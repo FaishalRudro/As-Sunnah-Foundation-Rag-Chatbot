@@ -1,0 +1,225 @@
+<svg viewBox="0 0 1000 720" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f1923;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a2d1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d6a4f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1b4332;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1d3557;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1b2a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7b4f12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4a2c0a;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#52b788"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#74b3ce"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f4a261"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="720" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="500" y="42" text-anchor="middle" fill="#a8d5b5" font-size="20" font-weight="700" filter="url(#glow)">As-Sunnah Foundation — RAG Assistant Architecture</text>
+  <text x="500" y="62" text-anchor="middle" fill="#52b788" font-size="12">FAISS + BM25 + CrossEncoder · Gemma 2B-IT · Whisper STT · LSTM Memory · gTTS</text>
+  <line x1="80" y1="72" x2="920" y2="72" stroke="#2d6a4f" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- ══ SECTION LABELS ══ -->
+  <!-- INPUT -->
+  <text x="120" y="100" fill="#74b3ce" font-size="11" font-weight="600" letter-spacing="2">INPUT LAYER</text>
+  <!-- RETRIEVAL -->
+  <text x="370" y="100" fill="#52b788" font-size="11" font-weight="600" letter-spacing="2">RETRIEVAL PIPELINE</text>
+  <!-- GENERATION -->
+  <text x="700" y="100" fill="#f4a261" font-size="11" font-weight="600" letter-spacing="2">GENERATION + OUTPUT</text>
+
+  <!-- ══ INPUT LAYER ══ -->
+  <!-- Voice Input box -->
+  <rect x="30" y="112" width="200" height="64" rx="10" fill="url(#blueGrad)" stroke="#74b3ce" stroke-width="1.5"/>
+  <text x="130" y="136" text-anchor="middle" fill="#74b3ce" font-size="13" font-weight="700">🎤 Voice Input</text>
+  <text x="130" y="153" text-anchor="middle" fill="#8ab4c8" font-size="10">Microphone / Audio Upload</text>
+  <text x="130" y="167" text-anchor="middle" fill="#8ab4c8" font-size="10">Gradio Audio Component</text>
+
+  <!-- Text Input box -->
+  <rect x="30" y="192" width="200" height="64" rx="10" fill="url(#blueGrad)" stroke="#74b3ce" stroke-width="1.5"/>
+  <text x="130" y="216" text-anchor="middle" fill="#74b3ce" font-size="13" font-weight="700">💬 Text Input</text>
+  <text x="130" y="233" text-anchor="middle" fill="#8ab4c8" font-size="10">Textbox / Sample Questions</text>
+  <text x="130" y="247" text-anchor="middle" fill="#8ab4c8" font-size="10">Gradio Interface</text>
+
+  <!-- Whisper STT -->
+  <rect x="30" y="280" width="200" height="64" rx="10" fill="url(#blueGrad)" stroke="#74b3ce" stroke-width="1.5"/>
+  <text x="130" y="304" text-anchor="middle" fill="#74b3ce" font-size="13" font-weight="700">🗣 Whisper STT</text>
+  <text x="130" y="321" text-anchor="middle" fill="#8ab4c8" font-size="10">whisper base.en (English)</text>
+  <text x="130" y="335" text-anchor="middle" fill="#8ab4c8" font-size="10">librosa 16kHz resampling</text>
+
+  <!-- LSTM Memory -->
+  <rect x="30" y="368" width="200" height="64" rx="10" fill="url(#blueGrad)" stroke="#74b3ce" stroke-width="1.5"/>
+  <text x="130" y="390" text-anchor="middle" fill="#74b3ce" font-size="13" font-weight="700">🧠 LSTM Memory</text>
+  <text x="130" y="407" text-anchor="middle" fill="#8ab4c8" font-size="10">Sliding window (6 turns)</text>
+  <text x="130" y="421" text-anchor="middle" fill="#8ab4c8" font-size="10">Decay-weighted follow-up</text>
+
+  <!-- Arrows: Voice → Whisper, Text → Query -->
+  <line x1="130" y1="176" x2="130" y2="192" stroke="#74b3ce" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="130" y1="256" x2="130" y2="280" stroke="#74b3ce" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="130" y1="344" x2="130" y2="368" stroke="#74b3ce" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- ══ RETRIEVAL PIPELINE ══ -->
+
+  <!-- Query Expansion -->
+  <rect x="265" y="355" width="200" height="50" rx="10" fill="#1a2d1a" stroke="#52b788" stroke-width="1.5"/>
+  <text x="365" y="376" text-anchor="middle" fill="#a8d5b5" font-size="12" font-weight="700">🔗 Query Expansion</text>
+  <text x="365" y="393" text-anchor="middle" fill="#74b3ce" font-size="10">LSTM follow-up detection</text>
+
+  <!-- FAISS -->
+  <rect x="265" y="112" width="185" height="70" rx="10" fill="url(#greenGrad)" stroke="#52b788" stroke-width="1.5"/>
+  <text x="357" y="135" text-anchor="middle" fill="#a8d5b5" font-size="13" font-weight="700">🔷 FAISS Index</text>
+  <text x="357" y="152" text-anchor="middle" fill="#74b3ce" font-size="10">multilingual-e5-base</text>
+  <text x="357" y="167" text-anchor="middle" fill="#74b3ce" font-size="10">"passage: " prefix · L2 dist</text>
+
+  <!-- BM25 -->
+  <rect x="265" y="200" width="185" height="70" rx="10" fill="url(#greenGrad)" stroke="#52b788" stroke-width="1.5"/>
+  <text x="357" y="223" text-anchor="middle" fill="#a8d5b5" font-size="13" font-weight="700">🔶 BM25 Index</text>
+  <text x="357" y="240" text-anchor="middle" fill="#74b3ce" font-size="10">rank_bm25 · Okapi BM25</text>
+  <text x="357" y="255" text-anchor="middle" fill="#74b3ce" font-size="10">Keyword exact match</text>
+
+  <!-- Score Merge -->
+  <rect x="265" y="288" width="185" height="55" rx="10" fill="url(#greenGrad)" stroke="#52b788" stroke-width="1.5"/>
+  <text x="357" y="311" text-anchor="middle" fill="#a8d5b5" font-size="13" font-weight="700">⚖️ Score Merge</text>
+  <text x="357" y="328" text-anchor="middle" fill="#74b3ce" font-size="10">α=0.6 FAISS · 0.4 BM25</text>
+
+  <!-- CrossEncoder -->
+  <rect x="265" y="450" width="185" height="60" rx="10" fill="url(#greenGrad)" stroke="#52b788" stroke-width="1.5"/>
+  <text x="357" y="474" text-anchor="middle" fill="#a8d5b5" font-size="13" font-weight="700">🎯 CrossEncoder</text>
+  <text x="357" y="491" text-anchor="middle" fill="#74b3ce" font-size="10">ms-marco-MiniLM-L-6-v2</text>
+  <text x="357" y="505" text-anchor="middle" fill="#74b3ce" font-size="10">Reranks top-12 → top-6</text>
+
+  <!-- Chunking (Part 2) -->
+  <rect x="265" y="538" width="185" height="70" rx="10" fill="#1a2d1a" stroke="#52b788" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="357" y="558" text-anchor="middle" fill="#a8d5b5" font-size="12" font-weight="700">📄 Semantic Chunker</text>
+  <text x="357" y="573" text-anchor="middle" fill="#74b3ce" font-size="10">Section / Numeric / Donation</text>
+  <text x="357" y="588" text-anchor="middle" fill="#74b3ce" font-size="10">RecursiveCharText ≤600 chars</text>
+  <text x="357" y="600" text-anchor="middle" fill="#52b788" font-size="9">[One-time indexing at startup]</text>
+
+  <!-- Retrieval arrows -->
+  <line x1="357" y1="182" x2="357" y2="200" stroke="#52b788" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="357" y1="270" x2="357" y2="288" stroke="#52b788" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="357" y1="343" x2="357" y2="355" stroke="#52b788" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="357" y1="405" x2="357" y2="450" stroke="#52b788" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+  <!-- LSTM → Query Expansion -->
+  <line x1="230" y1="390" x2="265" y2="380" stroke="#74b3ce" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowBlue)"/>
+  <!-- Query Expansion feeds both FAISS + BM25 -->
+  <line x1="365" y1="355" x2="365" y2="182" stroke="#52b788" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowGreen)"/>
+
+  <!-- ══ GENERATION + OUTPUT ══ -->
+
+  <!-- Context Builder -->
+  <rect x="490" y="112" width="190" height="60" rx="10" fill="url(#amberGrad)" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="585" y="136" text-anchor="middle" fill="#ffd6a5" font-size="13" font-weight="700">📋 Context Builder</text>
+  <text x="585" y="153" text-anchor="middle" fill="#e0a87b" font-size="10">original_chunk metadata</text>
+  <text x="585" y="167" text-anchor="middle" fill="#e0a87b" font-size="10">Labelled source blocks</text>
+
+  <!-- Prompt Builder -->
+  <rect x="490" y="196" width="190" height="60" rx="10" fill="url(#amberGrad)" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="585" y="220" text-anchor="middle" fill="#ffd6a5" font-size="13" font-weight="700">🛡 Prompt Builder</text>
+  <text x="585" y="237" text-anchor="middle" fill="#e0a87b" font-size="10">Anti-hallucination system prompt</text>
+  <text x="585" y="251" text-anchor="middle" fill="#e0a87b" font-size="10">LSTM history injection</text>
+
+  <!-- Gemma 2B-IT -->
+  <rect x="490" y="280" width="190" height="70" rx="10" fill="url(#amberGrad)" stroke="#f4a261" stroke-width="2"/>
+  <text x="585" y="305" text-anchor="middle" fill="#ffd6a5" font-size="14" font-weight="700">🤖 Gemma 2B-IT</text>
+  <text x="585" y="322" text-anchor="middle" fill="#e0a87b" font-size="10">google/gemma-2-2b-it</text>
+  <text x="585" y="337" text-anchor="middle" fill="#e0a87b" font-size="10">max_new_tokens=400 · greedy</text>
+  <text x="585" y="351" text-anchor="middle" fill="#e0a87b" font-size="10">repetition_penalty=1.15</text>
+
+  <!-- Confidence Scorer -->
+  <rect x="490" y="374" width="190" height="70" rx="10" fill="url(#amberGrad)" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="585" y="397" text-anchor="middle" fill="#ffd6a5" font-size="13" font-weight="700">📊 Confidence Scorer</text>
+  <text x="585" y="414" text-anchor="middle" fill="#e0a87b" font-size="10">Faithfulness · Precision</text>
+  <text x="585" y="429" text-anchor="middle" fill="#e0a87b" font-size="10">Retrieval conf · Hallucination</text>
+  <text x="585" y="443" text-anchor="middle" fill="#e0a87b" font-size="10">Overall = 0.45f+0.30p+0.25r</text>
+
+  <!-- gTTS -->
+  <rect x="490" y="466" width="190" height="55" rx="10" fill="url(#amberGrad)" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="585" y="489" text-anchor="middle" fill="#ffd6a5" font-size="13" font-weight="700">🔊 gTTS (TTS)</text>
+  <text x="585" y="506" text-anchor="middle" fill="#e0a87b" font-size="10">English MP3 · autoplay</text>
+  <text x="585" y="519" text-anchor="middle" fill="#e0a87b" font-size="10">Skips fallback answers</text>
+
+  <!-- Generation arrows -->
+  <line x1="585" y1="172" x2="585" y2="196" stroke="#f4a261" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <line x1="585" y1="256" x2="585" y2="280" stroke="#f4a261" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <line x1="585" y1="350" x2="585" y2="374" stroke="#f4a261" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+  <line x1="585" y1="444" x2="585" y2="466" stroke="#f4a261" stroke-width="1.5" marker-end="url(#arrowAmber)"/>
+
+  <!-- CrossEncoder → Context Builder -->
+  <line x1="450" y1="475" x2="490" y2="140" stroke="#f4a261" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowAmber)"/>
+
+  <!-- ══ GRADIO OUTPUT ══ -->
+  <rect x="720" y="200" width="230" height="270" rx="12" fill="#0d1b0d" stroke="#52b788" stroke-width="2"/>
+  <text x="835" y="224" text-anchor="middle" fill="#a8d5b5" font-size="13" font-weight="700">🖥 Gradio UI Output</text>
+  <line x1="730" y1="232" x2="940" y2="232" stroke="#2d6a4f" stroke-width="1"/>
+
+  <rect x="734" y="242" width="202" height="30" rx="6" fill="#1a2d1a"/>
+  <text x="835" y="261" text-anchor="middle" fill="#a8d5b5" font-size="11">📝 Markdown Answer</text>
+
+  <rect x="734" y="280" width="202" height="30" rx="6" fill="#1a2d1a"/>
+  <text x="835" y="299" text-anchor="middle" fill="#74b3ce" font-size="11">📚 Source Chunks + Scores</text>
+
+  <rect x="734" y="318" width="202" height="30" rx="6" fill="#1a2d1a"/>
+  <text x="835" y="337" text-anchor="middle" fill="#f4a261" font-size="11">📊 Confidence Dashboard</text>
+
+  <rect x="734" y="356" width="202" height="30" rx="6" fill="#1a2d1a"/>
+  <text x="835" y="375" text-anchor="middle" fill="#ffd6a5" font-size="11">🔊 Audio Playback (MP3)</text>
+
+  <rect x="734" y="394" width="202" height="30" rx="6" fill="#1a2d1a"/>
+  <text x="835" y="413" text-anchor="middle" fill="#8ab4c8" font-size="11">📜 LSTM History Panel</text>
+
+  <rect x="734" y="432" width="202" height="30" rx="6" fill="#1a2d1a"/>
+  <text x="835" y="451" text-anchor="middle" fill="#74b3ce" font-size="11">⚠️ Fallback Indicator</text>
+
+  <!-- Gemma → Gradio -->
+  <line x1="680" y1="320" x2="720" y2="320" stroke="#52b788" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <!-- gTTS → Gradio audio -->
+  <line x1="680" y1="493" x2="720" y2="420" stroke="#f4a261" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowAmber)"/>
+  <!-- Confidence → Gradio -->
+  <line x1="680" y1="410" x2="720" y2="370" stroke="#f4a261" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowAmber)"/>
+
+  <!-- ══ DATASET (bottom) ══ -->
+  <rect x="265" y="630" width="420" height="52" rx="10" fill="#12201a" stroke="#2d6a4f" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="475" y="652" text-anchor="middle" fill="#52b788" font-size="12" font-weight="700">📂 Dataset: as_sunnah_foundation_extract.txt</text>
+  <text x="475" y="669" text-anchor="middle" fill="#74b3ce" font-size="10">Sections: Home · About Us · Activities · Blogs · Donation Funds · Numeric Stats</text>
+
+  <!-- Dataset → Chunker -->
+  <line x1="475" y1="630" x2="400" y2="608" stroke="#2d6a4f" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowGreen)"/>
+
+  <!-- ══ LEGEND ══ -->
+  <rect x="720" y="540" width="230" height="130" rx="10" fill="#0d1b0d" stroke="#2d6a4f" stroke-width="1"/>
+  <text x="835" y="560" text-anchor="middle" fill="#a8d5b5" font-size="11" font-weight="700">LEGEND</text>
+  <rect x="734" y="570" width="14" height="10" rx="2" fill="#1d3557" stroke="#74b3ce" stroke-width="1.5"/>
+  <text x="755" y="580" fill="#74b3ce" font-size="10">Input / STT / Memory</text>
+  <rect x="734" y="590" width="14" height="10" rx="2" fill="#1b4332" stroke="#52b788" stroke-width="1.5"/>
+  <text x="755" y="600" fill="#52b788" font-size="10">Retrieval Pipeline</text>
+  <rect x="734" y="610" width="14" height="10" rx="2" fill="#4a2c0a" stroke="#f4a261" stroke-width="1.5"/>
+  <text x="755" y="620" fill="#f4a261" font-size="10">Generation + Output</text>
+  <line x1="734" y1="635" x2="748" y2="635" stroke="#a8d5b5" stroke-width="1.5"/>
+  <text x="755" y="639" fill="#a8d5b5" font-size="10">Main data flow</text>
+  <line x1="734" y1="652" x2="748" y2="652" stroke="#a8d5b5" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="755" y="656" fill="#8ab4c8" font-size="10">Secondary / support flow</text>
+
+  <!-- Platform note -->
+  <text x="500" y="700" text-anchor="middle" fill="#4a7c59" font-size="10">Platform: Kaggle Notebook (GPU T4) · Free Tier · All models open-source</text>
+</svg>
